@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:simplechat/models/message.dart';
+import 'package:simplechat/widgets/chat_input_field.dart';
 
 void main() {
   runApp(const MyApp());
@@ -58,7 +59,6 @@ class _MyHomePageState extends State<MyHomePage> {
       if (_scrollController.hasClients) {
         _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
       }
-      ;
     });
   }
 
@@ -103,45 +103,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
               ),
             ),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 32),
-              color: Color.fromARGB(1, 255, 255, 255),
-              height: 60,
-
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _textController,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(64.0),
-                          borderSide: BorderSide(
-                            color: Color.fromARGB(255, 12, 134, 114),
-                            width: 2.0,
-                            strokeAlign: BorderSide.strokeAlignInside,
-                          ),
-                        ),
-                        hintText: "Wpisz wiadomość",
-                      ),
-                    ),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(left: 8.0),
-                    decoration: BoxDecoration(
-                      color: Color.fromARGB(255, 12, 134, 114),
-                      borderRadius: BorderRadius.circular(64.0),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.send),
-                      color: Colors.white,
-                      onPressed: () {
-                        _handleSendMessage();
-                      },
-                    ),
-                  ),
-                ],
-              ),
+            ChatInputField(
+              textController: _textController,
+              onSend: _handleSendMessage,
             ),
           ],
         ),
