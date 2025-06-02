@@ -134,6 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                     child: IconButton(
                       icon: const Icon(Icons.send),
+                      color: Colors.white,
                       onPressed: () {
                         _handleSendMessage();
                       },
