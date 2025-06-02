@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 
 class ChatInputField extends StatelessWidget {
@@ -17,8 +15,6 @@ class ChatInputField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(),
-
       child: Row(
         children: [
           Expanded(
