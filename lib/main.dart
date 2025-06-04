@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:simplechat/models/message.dart';
 import 'package:simplechat/widgets/chat_input_field.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(const MyApp());
@@ -41,29 +44,104 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  // MEssage list to display in the chat
-  void _handleSendMessage() {
+  void _handleSendMessage() async {
+    // 1. Zmieniamy metodę na async
     final String text = _textController.text;
-    if (text.isNotEmpty) {
-      final Message newMessage = Message(
-        text: text,
-        messageId: DateTime.now().millisecondsSinceEpoch.toString(),
-        senderId: 'user',
+    if (text.isEmpty) {
+      // Sprawdzamy, czy tekst nie jest pusty
+      return; // Jeśli jest pusty, nic nie rób
+    }
+
+    // 2. Dodajemy wiadomość użytkownika do UI od razu
+    final Message userMessage = Message(
+      text: text,
+      messageId:
+          DateTime.now().millisecondsSinceEpoch.toString() +
+          "_user", // Dodajemy _user dla unikalności
+      senderId: 'user', // Identyfikator użytkownika
+      timestamp: DateTime.now(),
+    );
+
+    setState(() {
+      _messages.add(userMessage); // Dodajemy wiadomość użytkownika do listy
+    });
+
+    final String messageToSendToBackend =
+        text; // Zapisujemy tekst przed wyczyszczeniem kontrolera
+    _textController.clear(); // Czyścimy pole tekstowe
+    FocusScope.of(context).unfocus(); // Opcjonalnie: ukrywamy klawiaturę
+
+    // Opcjonalnie: Możesz dodać wskaźnik ładowania/pisania przez Gemini
+    // np. dodając tymczasową wiadomość "Gemini pisze..." lub ustawiając flagę w stanie
+    // setState(() { _isGeminiTyping = true; });
+
+    try {
+      // 3. Wywołanie Twojej funkcji Firebase Cloud Function
+      final response = await http.post(
+        Uri.parse('https://geminiproxy-vphgpojdyq-ew.a.run.app'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'prompt':
+              messageToSendToBackend, // Wysyłamy tekst wiadomości użytkownika jako "prompt"
+        }),
+      );
+
+      // Opcjonalnie: Ukryj wskaźnik ładowania
+      // setState(() { _isGeminiTyping = false; });
+
+      if (response.statusCode == 200) {
+        // Jeśli odpowiedź serwera jest OK (200)
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        final String geminiReply =
+            data['reply'] ??
+            'Nie udało się uzyskać odpowiedzi.'; // Odczytujemy odpowiedź z pola "reply"
+
+        final Message geminiMessage = Message(
+          text: geminiReply,
+          messageId:
+              "${DateTime.now().millisecondsSinceEpoch}_gemini", // Unikalne ID dla wiadomości Gemini
+          senderId: 'gemini_bot', // Specjalny senderId dla Gemini
+          timestamp: DateTime.now(),
+        );
+        setState(() {
+          _messages.add(geminiMessage); // Dodajemy odpowiedź Gemini do listy
+        });
+      } else {
+        // Jeśli serwer zwrócił błąd
+        print(
+          'Błąd odpowiedzi z backendu: ${response.statusCode} - ${response.body}',
+        );
+        final Message errorMessage = Message(
+          text:
+              'Przepraszam, wystąpił błąd serwera (${response.statusCode}). Spróbuj ponownie później.',
+          messageId: "${DateTime.now().millisecondsSinceEpoch}_error",
+          senderId: 'system', // Wiadomość systemowa o błędzie
+          timestamp: DateTime.now(),
+        );
+        setState(() {
+          _messages.add(errorMessage);
+        });
+      }
+    } catch (e) {
+      // Jeśli wystąpił błąd podczas samego zapytania HTTP (np. brak internetu)
+      // Opcjonalnie: Ukryj wskaźnik ładowania
+      // setState(() { _isGeminiTyping = false; });
+      print('Błąd podczas wysyłania wiadomości do backendu: $e');
+      final Message errorMessage = Message(
+        text: 'Błąd połączenia. Sprawdź swoje połączenie z internetem.',
+        messageId: "${DateTime.now().millisecondsSinceEpoch}_conn_error",
+        senderId: 'system',
         timestamp: DateTime.now(),
       );
       setState(() {
-        _messages.add(newMessage);
+        _messages.add(errorMessage);
       });
-      _textController.clear();
     }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-      }
-    });
   }
 
-  List<Message> _messages = [
+  final List<Message> _messages = [
     Message(
       text: 'Witaj w SimpleChat!',
       messageId: '1',
@@ -72,6 +150,7 @@ class _MyHomePageState extends State<MyHomePage> {
     ),
   ];
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
