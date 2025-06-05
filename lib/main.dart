@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:simplechat/models/message.dart';
 import 'package:simplechat/widgets/chat_input_field.dart';
+import 'package:simplechat/widgets/message_bubble.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 
@@ -45,7 +46,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _handleSendMessage() async {
-    // 1. Zmieniamy metodę na async
     final String text = _textController.text;
     if (text.isEmpty) {
       // Sprawdzamy, czy tekst nie jest pusty
@@ -199,48 +199,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     radius: 16.0, // Rozmiar awatara
                   );
 
-                  // Dymek wiadomości (ten sam co poprzednio)
-                  final messageBubble = Container(
-                    margin: const EdgeInsets.symmetric(
-                      vertical: 4.0,
-                      horizontal: 8.0,
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12.0,
-                      vertical: 4.0,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isUserMessage
-                          ? const Color.fromARGB(255, 12, 134, 114)
-                          : Colors.grey[300],
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: isUserMessage
-                          ? CrossAxisAlignment.end
-                          : CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          message.text,
-                          style: TextStyle(
-                            color: isUserMessage ? Colors.white : Colors.black,
-                          ),
-                        ),
-                        const SizedBox(height: 4.0),
-                        Text(
-                          formattedTime,
-                          style: TextStyle(
-                            fontSize: 10.0,
-                            color: isUserMessage
-                                ? Colors.white70
-                                : Colors.black54,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-
                   return Align(
                     alignment: isUserMessage
                         ? Alignment.centerRight
@@ -251,13 +209,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          if (!isUserMessage) avatar,
-                          const SizedBox(width: 2.0),
-                          messageBubble,
-                          if (isUserMessage) ...[
-                            const SizedBox(width: 2.0),
-                            avatar,
-                          ],
+                          MessageBubble(
+                            message: message,
+                            isCurrentUserMessage: isUserMessage,
+                          ),
                         ],
                       ),
                     ),

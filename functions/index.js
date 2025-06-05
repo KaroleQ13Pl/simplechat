@@ -1,6 +1,6 @@
 // Firebase Functions v2
 const {onRequest} =
-require("firebase-functions/v2/https"); 
+require("firebase-functions/v2/https");
 const {setGlobalOptions} = require("firebase-functions/v2");
 setGlobalOptions({region: "europe-west1"});
 const {defineString} = require("firebase-functions/params");
